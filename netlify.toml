@@ -1,11 +1,12 @@
 [build]
   base = "."
-  command = "cd frontend && npm install && npm run build && cd ../backend && npm install && npm run build"
+  command = "npm install && npm run build"
   publish = "frontend/dist"
   functions = "backend/functions"
 
 [build.environment]
   NODE_VERSION = "18"
+  NPM_VERSION = "10.7.0"
 
 [[redirects]]
   from = "/api/*"
