@@ -1,12 +1,8 @@
 [build]
-  base = "frontend"
-  command = "npm install && npm run build"
-  publish = "dist"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+  base = "."
+  command = "cd frontend && npm install && npm run build && cd ../backend && npm install && npm run build"
+  publish = "frontend/dist"
+  functions = "backend/functions"
 
 [build.environment]
   NODE_VERSION = "18"
@@ -16,5 +12,7 @@
   to = "/.netlify/functions/server"
   status = 200
 
-[functions]
-  directory = "../backend/functions"
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
