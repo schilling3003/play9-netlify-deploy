@@ -1,6 +1,6 @@
 import { GameData, GameSummary, PlayerFact } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 // Utility function to check server connectivity
 async function checkServerConnectivity(): Promise<boolean> {
