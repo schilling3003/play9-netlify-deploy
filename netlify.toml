@@ -1,6 +1,6 @@
 [build]
-  base = "."
-  command = "npm install && npm run build"
+  base = "/"
+  command = "pwd && npm install && cd frontend && npm install && npm run build && cd ../backend && npm install && npm run build"
   publish = "frontend/dist"
   functions = "backend/functions"
 
