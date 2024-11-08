@@ -1,8 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import { createClient } from '@libsql/client';
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
 import type { Request, Response } from 'express';
-import type { GameData, PlayerFact } from '../types';
+import { GameData, PlayerFact } from './types.js';
 
 const app = express();
 
@@ -11,13 +12,16 @@ app.use(cors());
 app.use(express.json());
 
 // Database setup
-const db = createClient({
-  url: 'file:golf.db',
-});
+let db: any;
 
 // Initialize database tables
 async function initDb() {
-  await db.execute(`
+  db = await open({
+    filename: './golf.db',
+    driver: sqlite3.Database
+  });
+
+  await db.exec(`
     CREATE TABLE IF NOT EXISTS games (
       id TEXT PRIMARY KEY,
       date TEXT NOT NULL,
@@ -27,7 +31,7 @@ async function initDb() {
     )
   `);
 
-  await db.execute(`
+  await db.exec(`
     CREATE TABLE IF NOT EXISTS player_facts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       player_name TEXT UNIQUE NOT NULL,
@@ -43,15 +47,15 @@ initDb().catch(console.error);
 // Game History endpoints
 app.get('/api/games', async (_req: Request, res: Response) => {
   try {
-    const result = await db.execute('SELECT * FROM games ORDER BY date DESC');
-    const games = result.rows.map((row: any) => ({
+    const games = await db.all('SELECT * FROM games ORDER BY date DESC');
+    const parsedGames = games.map((row: any) => ({
       id: row.id,
       date: row.date,
-      playerNames: JSON.parse(row.player_names as string),
-      scores: JSON.parse(row.scores as string),
-      finalTotals: JSON.parse(row.final_totals as string)
+      playerNames: JSON.parse(row.player_names),
+      scores: JSON.parse(row.scores),
+      finalTotals: JSON.parse(row.final_totals)
     }));
-    res.json(games);
+    res.json(parsedGames);
   } catch (error) {
     console.error('Error fetching games:', error);
     res.status(500).json({ error: 'Failed to fetch games' });
@@ -60,26 +64,22 @@ app.get('/api/games', async (_req: Request, res: Response) => {
 
 app.get('/api/games/:id', async (req: Request, res: Response) => {
   try {
-    const result = await db.execute({
-      sql: 'SELECT * FROM games WHERE id = ?',
-      args: [req.params.id]
-    });
+    const game = await db.get('SELECT * FROM games WHERE id = ?', [req.params.id]);
     
-    if (!result.rows.length) {
+    if (!game) {
       res.status(404).json({ error: 'Game not found' });
       return;
     }
 
-    const row = result.rows[0];
-    const game = {
-      id: row.id,
-      date: row.date,
-      playerNames: JSON.parse(row.player_names as string),
-      scores: JSON.parse(row.scores as string),
-      finalTotals: JSON.parse(row.final_totals as string)
+    const parsedGame = {
+      id: game.id,
+      date: game.date,
+      playerNames: JSON.parse(game.player_names),
+      scores: JSON.parse(game.scores),
+      finalTotals: JSON.parse(game.final_totals)
     };
     
-    res.json(game);
+    res.json(parsedGame);
   } catch (error) {
     console.error('Error fetching game:', error);
     res.status(500).json({ error: 'Failed to fetch game' });
@@ -89,17 +89,17 @@ app.get('/api/games/:id', async (req: Request, res: Response) => {
 app.post('/api/games', async (req: Request, res: Response) => {
   try {
     const game = req.body as GameData;
-    await db.execute({
-      sql: `INSERT INTO games (id, date, player_names, scores, final_totals)
-            VALUES (?, ?, ?, ?, ?)`,
-      args: [
+    await db.run(
+      `INSERT INTO games (id, date, player_names, scores, final_totals)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
         game.id,
         game.date,
         JSON.stringify(game.playerNames),
         JSON.stringify(game.scores),
         JSON.stringify(game.finalTotals)
       ]
-    });
+    );
     res.status(201).json(game);
   } catch (error) {
     console.error('Error saving game:', error);
@@ -110,14 +110,14 @@ app.post('/api/games', async (req: Request, res: Response) => {
 // Player Facts endpoints
 app.get('/api/player-facts', async (_req: Request, res: Response) => {
   try {
-    const result = await db.execute('SELECT id, player_name, fact, created_at FROM player_facts ORDER BY created_at DESC');
-    const facts = result.rows.map((row: any) => ({
-      id: row.id as number,
-      playerName: row.player_name as string,
-      fact: row.fact as string,
-      createdAt: new Date(row.created_at as string)
+    const facts = await db.all('SELECT id, player_name, fact, created_at FROM player_facts ORDER BY created_at DESC');
+    const parsedFacts = facts.map((row: any) => ({
+      id: row.id,
+      playerName: row.player_name,
+      fact: row.fact,
+      createdAt: new Date(row.created_at)
     }));
-    res.json(facts);
+    res.json(parsedFacts);
   } catch (error) {
     console.error('Error fetching player facts:', error);
     res.status(500).json({ error: 'Failed to fetch player facts' });
@@ -127,23 +127,21 @@ app.get('/api/player-facts', async (_req: Request, res: Response) => {
 app.post('/api/player-facts', async (req: Request, res: Response) => {
   try {
     const { playerName, fact, createdAt } = req.body as PlayerFact;
-    const result = await db.execute({
-      sql: `INSERT INTO player_facts (player_name, fact, created_at)
-            VALUES (?, ?, ?)
-            RETURNING id, player_name, fact, created_at`,
-      args: [
+    const result = await db.run(
+      `INSERT INTO player_facts (player_name, fact, created_at)
+       VALUES (?, ?, ?)`,
+      [
         playerName,
         fact,
         createdAt.toISOString()
       ]
-    });
+    );
 
-    const row = result.rows[0];
     const savedFact: PlayerFact = {
-      id: row.id as number,
-      playerName: row.player_name as string,
-      fact: row.fact as string,
-      createdAt: new Date(row.created_at as string)
+      id: result.lastID,
+      playerName,
+      fact,
+      createdAt
     };
 
     res.status(201).json(savedFact);
@@ -155,10 +153,7 @@ app.post('/api/player-facts', async (req: Request, res: Response) => {
 
 app.delete('/api/player-facts/:playerName', async (req: Request, res: Response) => {
   try {
-    await db.execute({
-      sql: 'DELETE FROM player_facts WHERE player_name = ?',
-      args: [req.params.playerName]
-    });
+    await db.run('DELETE FROM player_facts WHERE player_name = ?', [req.params.playerName]);
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting player fact:', error);

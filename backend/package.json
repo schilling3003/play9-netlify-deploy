@@ -5,21 +5,23 @@
   "scripts": {
     "start": "node dist/index.js",
     "build": "tsc && mkdir -p functions && cp dist/serverless.js functions/server.js",
-    "dev": "ts-node src/index.ts"
+    "dev": "node --loader ts-node/esm src/index.ts"
   },
+  "type": "module",
   "dependencies": {
-    "@libsql/client": "^0.14.0",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "serverless-http": "^3.2.0"
+    "serverless-http": "^3.2.0",
+    "sqlite": "^5.0.1",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "latest",
-    "@types/serverless-http": "^3.7.2",
-    "ts-node": "latest",
-    "typescript": "^4.9.3"
+    "@types/sqlite3": "^3.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   }
 }

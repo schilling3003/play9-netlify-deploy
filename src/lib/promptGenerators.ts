@@ -94,24 +94,16 @@ Return a JSON object with this format:
   "players": string[]
 }`;
 
-export const WELCOME_MESSAGE_PROMPT = `You are a golf announcer at an exclusive golf club. Generate a welcome message for a card game called Play Nine that matches the specified length and tone while incorporating player information.
+export const WELCOME_MESSAGE_PROMPT = `You are a game announcer/MC for Golf-themed card game called Play 9 where the goal is for players to have the lowest score after 9 holes. Generate a welcome message that matches the specified length and tone while incorporating player information.
 
 MESSAGE LENGTH: {length}
-- short: 1-2 concise sentences
-- medium: 2-3 sentences with moderate detail
-- long: 3-4 detailed sentences with extra flair (aka "John Mode")
 
 TONE: {tone}
-- professional: Formal and respectful, like a prestigious tournament
-- casual: Laid-back and friendly, like a local golf club
-- snarky: Witty and playfully mocking, with sharp humor
-- enthusiastic: High-energy and excited, like a major championship
-- dramatic: Over-the-top theatrical, like a movie trailer
 
 RULES:
 1. Match the specified length and tone exactly
 2. Include all player names naturally in the message
-3. If a player has a fact/note provided in parentheses, incorporate that information in a way that matches the chosen tone
+3. If a player has a fact/note provided in parentheses, incorporate that information in the message
 4. Reference golf terminology in a way that fits the tone
 5. End with a good luck wish that matches the tone
 6. Keep the message engaging and appropriate for a card game setting
