@@ -1,6 +1,6 @@
 import { GameData, GameSummary, PlayerFact } from '../types';
 
-const API_BASE = 'http://localhost:3002/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002/api';
 
 // Utility function to check server connectivity
 async function checkServerConnectivity(): Promise<boolean> {
@@ -56,12 +56,21 @@ export async function searchGames(playerNames: string[]): Promise<GameSummary[]>
         )
       )
     )
-    .map(game => ({
-      id: game.id,
-      date: game.date,
-      playerCount: game.playerNames.length,
-      finalTotals: game.finalTotals
-    }));
+    .map(game => {
+      const minScore = Math.min(...game.finalTotals);
+      const winnerIndex = game.finalTotals.indexOf(minScore);
+      return {
+        id: game.id,
+        date: game.date,
+        playerCount: game.playerNames.length,
+        scores: game.scores.map(roundScores => roundScores[0]), // Get first player's scores as required by GameSummary
+        finalTotals: game.finalTotals,
+        winner: {
+          name: game.playerNames[winnerIndex],
+          score: minScore
+        }
+      };
+    });
 }
 
 export async function getBestScores(): Promise<GameData[]> {
