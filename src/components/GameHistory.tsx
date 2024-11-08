@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Trophy, Search, History, ArrowLeft } from 'lucide-react';
-import { getGameSummaries, getBestScores, searchGames, type GameSummary } from '../lib/storage';
+import { getGameSummaries, getBestScores, searchGames } from '../lib/storage';
 import { GameDetails } from './GameDetails';
 
 const bgColors = [
@@ -15,7 +15,7 @@ const iconClasses = [
   'text-amber-700'
 ];
 
-export const GameHistory: React.FC = () => {
+export const GameHistory = () => {
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const bestScores = getBestScores();

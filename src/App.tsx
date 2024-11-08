@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Header } from './components/Header';
 import { VoiceInput } from './components/VoiceInput';
 import { Scorecard } from './components/Scorecard';
@@ -41,13 +41,27 @@ function App() {
     if (currentRound < 9) {
       updateState({ currentRound: currentRound + 1 });
     } else {
-      saveGame(players, scores);
+      const finalTotals = players.map((_, playerIndex) => 
+        scores.reduce((total, roundScores) => total + (roundScores[playerIndex] || 0), 0)
+      );
+      saveGame({
+        playerNames: players,
+        scores,
+        finalTotals
+      });
     }
   };
 
   const handleResetGame = () => {
     if (currentRound === 9) {
-      saveGame(players, scores);
+      const finalTotals = players.map((_, playerIndex) => 
+        scores.reduce((total, roundScores) => total + (roundScores[playerIndex] || 0), 0)
+      );
+      saveGame({
+        playerNames: players,
+        scores,
+        finalTotals
+      });
     }
     resetGame();
     setShowHistory(false);

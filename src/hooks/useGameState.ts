@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { GameState, Player } from '../types';
-import { getGames, saveGame } from '../lib/api';
+import { saveGame } from '../lib/api';
 
 const initialPlayers: Player[] = Array.from({ length: 4 }, (_, i) => ({
   id: i + 1,

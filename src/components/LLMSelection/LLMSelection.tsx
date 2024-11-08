@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Play } from 'lucide-react';
 import { MODEL_CHOICES, getSelectedModels, saveSelectedModels, DefaultModels, WelcomeMessageSettings } from '../../lib/models';
 import { generateWelcomeMessage, processGameSetup, processVoiceInput } from '../../lib/openai';
