@@ -1,8 +1,7 @@
 [build]
-  base = "/"
-  command = "pwd && npm install && cd frontend && npm install && npm run build && cd ../backend && npm install && npm run build"
-  publish = "frontend/dist"
-  functions = "backend/functions"
+  publish = "./frontend/dist"
+  command = "npm install && cd frontend && npm install && npm run build && cd ../backend && npm install && npm run build"
+  functions = "./backend/functions"
 
 [build.environment]
   NODE_VERSION = "18"
