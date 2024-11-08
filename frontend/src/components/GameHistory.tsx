@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { getGameSummaries, searchGames } from '../lib/storage';
 import { GameSummary } from '../types';
 
@@ -62,7 +61,7 @@ export const GameHistory: React.FC = () => {
                 <th className="px-3 py-2 text-left text-text font-medium">Date</th>
                 <th className="px-3 py-2 text-left text-text font-medium">Players</th>
                 <th className="px-3 py-2 text-left text-text font-medium">Winner</th>
-                <th className="px-3 py-2 text-left text-text font-medium">Actions</th>
+                <th className="px-3 py-2 text-left text-text font-medium">Score</th>
               </tr>
             </thead>
             <tbody className="text-text">
@@ -70,17 +69,8 @@ export const GameHistory: React.FC = () => {
                 <tr key={game.id} className="border-b border-surface-light">
                   <td className="px-3 py-2">{game.date}</td>
                   <td className="px-3 py-2">{game.playerCount} players</td>
-                  <td className="px-3 py-2">
-                    {game.winner.name} ({game.winner.score})
-                  </td>
-                  <td className="px-3 py-2">
-                    <Link 
-                      to={`/game/${game.id}`} 
-                      className="text-primary hover:underline"
-                    >
-                      View Details
-                    </Link>
-                  </td>
+                  <td className="px-3 py-2">{game.winner.name}</td>
+                  <td className="px-3 py-2">{game.winner.score}</td>
                 </tr>
               ))}
             </tbody>
