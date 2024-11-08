@@ -7,8 +7,19 @@ import type { GameData, PlayerFact } from './types';
 
 const app = express();
 
+// CORS configuration
+const corsOptions = {
+  origin: [
+    'https://voluble-dango-cdb6dd.netlify.app',
+    'http://localhost:3000',
+    'http://localhost:5173'
+  ],
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type']
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Database setup
