@@ -1,14 +1,13 @@
 [build]
-  functions = "functions"
   command = "npm run build"
+  functions = "functions"
+  publish = "dist/client"
 
 [build.environment]
-  NODE_VERSION = "16"
+  NODE_VERSION = "18"
+  SQLITE_DB_PATH = "./golf.db"
 
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/server"
   status = 200
-
-[context.production.environment]
-  SQLITE_DB_PATH = "/opt/netlify/persistent/golf.db"

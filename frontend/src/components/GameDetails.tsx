@@ -1,12 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { getGameById } from '../lib/storage';
+import { GameData } from '../types';
 
 interface GameDetailsProps {
   gameId: string;
 }
 
 export const GameDetails: React.FC<GameDetailsProps> = ({ gameId }) => {
-  const game = getGameById(gameId);
+  const [game, setGame] = useState<GameData | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchGame = async () => {
+      try {
+        setIsLoading(true);
+        const fetchedGame = await getGameById(gameId);
+        setGame(fetchedGame);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGame();
+  }, [gameId]);
+
+  if (isLoading) {
+    return (
+      <div className="text-center text-text-secondary py-8">
+        Loading game details...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-error py-8">
+        {error}
+      </div>
+    );
+  }
 
   if (!game) {
     return (

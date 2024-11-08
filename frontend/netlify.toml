@@ -2,13 +2,10 @@
   command = "npm run build"
   publish = "dist"
 
-[build.environment]
-  NODE_VERSION = "16"
-
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/api/*"
+  to = "/.netlify/functions/server"
   status = 200
 
-[context.production.environment]
-  VITE_API_BASE_URL = "https://your-backend-url.com"
+[build.environment]
+  NODE_VERSION = "18"
