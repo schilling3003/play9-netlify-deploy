@@ -1,25 +1,18 @@
 {
-  "name": "play9-monorepo",
+  "name": "play9-golf",
   "private": true,
-  "version": "1.0.0",
-  "description": "Play9 Golf Scoring App",
-  "scripts": {
-    "frontend:dev": "npm run dev --workspace=frontend",
-    "frontend:build": "npm run build --workspace=frontend",
-    "backend:dev": "npm run dev --workspace=backend",
-    "backend:build": "npm run build --workspace=backend",
-    "dev": "concurrently \"npm run frontend:dev\" \"npm run backend:dev\"",
-    "build": "npm run frontend:build && npm run backend:build"
-  },
   "workspaces": [
     "frontend",
     "backend"
   ],
-  "devDependencies": {
-    "concurrently": "^8.2.2"
+  "scripts": {
+    "install": "npm install --workspaces",
+    "build": "npm run build --workspaces",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "build:backend": "cd backend && npm install && npm run build"
   },
-  "dependencies": {
-    "@types/react-router-dom": "^5.3.3",
-    "react-router-dom": "^6.28.0"
+  "engines": {
+    "node": "18.20.4",
+    "npm": "10.7.0"
   }
 }
