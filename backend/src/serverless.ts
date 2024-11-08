@@ -9,11 +9,7 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: [
-    'https://voluble-dango-cdb6dd.netlify.app',
-    'http://localhost:3000',
-    'http://localhost:5173'
-  ],
+  origin: true, // This allows all origins in production
   methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type']
 };
@@ -24,7 +20,8 @@ app.use(express.json());
 
 // Database setup
 const db = createClient({
-  url: process.env.SQLITE_DB_PATH || 'file:golf.db',
+  url: process.env.TURSO_DATABASE_URL || 'file:golf.db',
+  authToken: process.env.TURSO_AUTH_TOKEN
 });
 
 // Initialize database tables
