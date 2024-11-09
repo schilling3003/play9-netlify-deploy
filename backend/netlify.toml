@@ -1,16 +1,10 @@
 [build]
   publish = "public"
   command = "echo 'No build needed'"
-
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
-  force = true
+  functions = "netlify/functions"
 
 [functions]
   directory = "netlify/functions"
-  node_bundler = "esbuild"
 
 [build.environment]
   NODE_VERSION = "18"

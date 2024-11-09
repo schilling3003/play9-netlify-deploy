@@ -32,6 +32,22 @@ export default async (request: Request, context: Context) => {
   const kv = context.env.NETLIFY_KV;
 
   try {
+    // Root path - provide API information
+    if (url.pathname === '/') {
+      return new Response(
+        JSON.stringify({
+          message: 'Play9 Golf API',
+          version: '1.0',
+          endpoints: {
+            test: '/api/test',
+            games: '/api/games',
+            game: '/api/games/:id'
+          }
+        }),
+        { headers: corsHeaders }
+      );
+    }
+
     // Simple test endpoint
     if (url.pathname === '/api/test') {
       return new Response(
@@ -78,7 +94,10 @@ export default async (request: Request, context: Context) => {
     }
 
     return new Response(
-      JSON.stringify({ error: 'Not found' }),
+      JSON.stringify({ 
+        error: 'Not found', 
+        message: 'The requested endpoint does not exist. Visit / for API documentation.'
+      }),
       { headers: corsHeaders, status: 404 }
     );
 
@@ -89,4 +108,4 @@ export default async (request: Request, context: Context) => {
       { headers: corsHeaders, status: 500 }
     );
   }
-};
+}
