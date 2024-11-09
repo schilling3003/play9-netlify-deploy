@@ -34,4 +34,4 @@
   status = 200
 
 [context.production.environment]
-  VITE_API_BASE_URL = "https://play9-backend-api.netlify.app/.netlify/functions/api"
+  VITE_API_BASE_URL = "https://play9-backend.netlify.app/.netlify/edge-functions/api"
