@@ -1,24 +1,55 @@
 import serverless from 'serverless-http';
 import express from 'express';
 import cors from 'cors';
-import { createClient } from '@libsql/client';
+import sqlite3 from 'sqlite3';
 import type { Request, Response } from 'express';
 import type { GameData, PlayerFact } from './types';
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// CORS configuration
+app.use(cors({
+  origin: ['https://play9-frontend.netlify.app', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'DELETE'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Database setup
-const db = createClient({
-  url: process.env.SQLITE_DB_PATH || 'file:golf.db',
-});
+const dbPath = process.env.SQLITE_DB_PATH || '/tmp/golf.db';
+const db = new sqlite3.Database(dbPath);
+
+// Promise wrappers for database operations
+const run = (sql: string, params: any[] = []): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function(err) {
+      if (err) reject(err);
+      else resolve(this);
+    });
+  });
+};
+
+const get = (sql: string, params: any[] = []): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+};
+
+const all = (sql: string, params: any[] = []): Promise<any[]> => {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+};
 
 // Initialize database tables
 async function initDb() {
-  await db.execute(`
+  await run(`
     CREATE TABLE IF NOT EXISTS games (
       id TEXT PRIMARY KEY,
       date TEXT NOT NULL,
@@ -28,7 +59,7 @@ async function initDb() {
     )
   `);
 
-  await db.execute(`
+  await run(`
     CREATE TABLE IF NOT EXISTS player_facts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       player_name TEXT UNIQUE NOT NULL,
@@ -38,19 +69,21 @@ async function initDb() {
   `);
 }
 
+// Initialize database
+initDb().catch(console.error);
+
 // Game History endpoints
 app.get('/api/games', async (_req: Request, res: Response) => {
   try {
-    await initDb();
-    const result = await db.execute('SELECT * FROM games ORDER BY date DESC');
-    const games = result.rows.map((row: any) => ({
+    const games = await all('SELECT * FROM games ORDER BY date DESC');
+    const formattedGames = games.map(row => ({
       id: row.id,
       date: row.date,
-      playerNames: JSON.parse(row.player_names as string),
-      scores: JSON.parse(row.scores as string),
-      finalTotals: JSON.parse(row.final_totals as string)
+      playerNames: JSON.parse(row.player_names),
+      scores: JSON.parse(row.scores),
+      finalTotals: JSON.parse(row.final_totals)
     }));
-    res.json(games);
+    res.json(formattedGames);
   } catch (error) {
     console.error('Error fetching games:', error);
     res.status(500).json({ error: 'Failed to fetch games' });
@@ -59,24 +92,19 @@ app.get('/api/games', async (_req: Request, res: Response) => {
 
 app.get('/api/games/:id', async (req: Request, res: Response) => {
   try {
-    await initDb();
-    const result = await db.execute({
-      sql: 'SELECT * FROM games WHERE id = ?',
-      args: [req.params.id]
-    });
+    const row = await get('SELECT * FROM games WHERE id = ?', [req.params.id]);
     
-    if (!result.rows.length) {
+    if (!row) {
       res.status(404).json({ error: 'Game not found' });
       return;
     }
 
-    const row = result.rows[0];
     const game = {
       id: row.id,
       date: row.date,
-      playerNames: JSON.parse(row.player_names as string),
-      scores: JSON.parse(row.scores as string),
-      finalTotals: JSON.parse(row.final_totals as string)
+      playerNames: JSON.parse(row.player_names),
+      scores: JSON.parse(row.scores),
+      finalTotals: JSON.parse(row.final_totals)
     };
     
     res.json(game);
@@ -88,19 +116,17 @@ app.get('/api/games/:id', async (req: Request, res: Response) => {
 
 app.post('/api/games', async (req: Request, res: Response) => {
   try {
-    await initDb();
     const game = req.body as GameData;
-    await db.execute({
-      sql: `INSERT INTO games (id, date, player_names, scores, final_totals)
-            VALUES (?, ?, ?, ?, ?)`,
-      args: [
+    await run(
+      'INSERT INTO games (id, date, player_names, scores, final_totals) VALUES (?, ?, ?, ?, ?)',
+      [
         game.id,
         game.date,
         JSON.stringify(game.playerNames),
         JSON.stringify(game.scores),
         JSON.stringify(game.finalTotals)
       ]
-    });
+    );
     res.status(201).json(game);
   } catch (error) {
     console.error('Error saving game:', error);
@@ -111,15 +137,14 @@ app.post('/api/games', async (req: Request, res: Response) => {
 // Player Facts endpoints
 app.get('/api/player-facts', async (_req: Request, res: Response) => {
   try {
-    await initDb();
-    const result = await db.execute('SELECT id, player_name, fact, created_at FROM player_facts ORDER BY created_at DESC');
-    const facts = result.rows.map((row: any) => ({
-      id: row.id as number,
-      playerName: row.player_name as string,
-      fact: row.fact as string,
-      createdAt: new Date(row.created_at as string)
+    const facts = await all('SELECT id, player_name, fact, created_at FROM player_facts ORDER BY created_at DESC');
+    const formattedFacts = facts.map(row => ({
+      id: row.id,
+      playerName: row.player_name,
+      fact: row.fact,
+      createdAt: new Date(row.created_at)
     }));
-    res.json(facts);
+    res.json(formattedFacts);
   } catch (error) {
     console.error('Error fetching player facts:', error);
     res.status(500).json({ error: 'Failed to fetch player facts' });
@@ -128,28 +153,22 @@ app.get('/api/player-facts', async (_req: Request, res: Response) => {
 
 app.post('/api/player-facts', async (req: Request, res: Response) => {
   try {
-    await initDb();
     const { playerName, fact, createdAt } = req.body as PlayerFact;
-    const result = await db.execute({
-      sql: `INSERT INTO player_facts (player_name, fact, created_at)
-            VALUES (?, ?, ?)
-            RETURNING id, player_name, fact, created_at`,
-      args: [
-        playerName,
-        fact,
-        createdAt.toISOString()
-      ]
+    const result = await run(
+      'INSERT INTO player_facts (player_name, fact, created_at) VALUES (?, ?, ?)',
+      [playerName, fact, createdAt.toISOString()]
+    );
+
+    const savedFact = await get(
+      'SELECT id, player_name, fact, created_at FROM player_facts WHERE id = last_insert_rowid()'
+    );
+
+    res.status(201).json({
+      id: savedFact.id,
+      playerName: savedFact.player_name,
+      fact: savedFact.fact,
+      createdAt: new Date(savedFact.created_at)
     });
-
-    const row = result.rows[0];
-    const savedFact: PlayerFact = {
-      id: row.id as number,
-      playerName: row.player_name as string,
-      fact: row.fact as string,
-      createdAt: new Date(row.created_at as string)
-    };
-
-    res.status(201).json(savedFact);
   } catch (error) {
     console.error('Error saving player fact:', error);
     res.status(500).json({ error: 'Failed to save player fact' });
@@ -158,11 +177,7 @@ app.post('/api/player-facts', async (req: Request, res: Response) => {
 
 app.delete('/api/player-facts/:playerName', async (req: Request, res: Response) => {
   try {
-    await initDb();
-    await db.execute({
-      sql: 'DELETE FROM player_facts WHERE player_name = ?',
-      args: [req.params.playerName]
-    });
+    await run('DELETE FROM player_facts WHERE player_name = ?', [req.params.playerName]);
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting player fact:', error);

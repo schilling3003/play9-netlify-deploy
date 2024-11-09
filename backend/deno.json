@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["deno.window"],
+    "strict": true
+  },
+  "importMap": {
+    "imports": {
+      "https://edge.netlify.com": "https://edge.netlify.com/v1/index.ts"
+    }
+  }
+}

@@ -27,6 +27,10 @@ export interface GameSummary {
   date: string;
   playerCount: number;
   finalTotals: number[];
+  winner: {
+    name: string;
+    score: number;
+  };
 }
 
 export interface PlayerFact {

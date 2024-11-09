@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Trophy, Search, History, ArrowLeft } from 'lucide-react';
 import { getGameSummaries, getBestScores, searchGames } from '../lib/storage';
 import { GameDetails } from './GameDetails';
+import { GameData, GameSummary } from '../types';
 
 const bgColors = [
   'bg-yellow-500',
@@ -18,10 +19,37 @@ const iconClasses = [
 export const GameHistory = () => {
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const bestScores = getBestScores();
-  const gameSummaries = searchQuery.trim() 
-    ? searchGames(searchQuery.split(',').map(s => s.trim()).filter(Boolean))
-    : getGameSummaries();
+  const [bestScores, setBestScores] = useState<GameData[]>([]);
+  const [gameSummaries, setGameSummaries] = useState<GameSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadBestScores = async () => {
+      try {
+        const scores = await getBestScores();
+        setBestScores(scores);
+      } catch (error) {
+        console.error('Failed to load best scores:', error);
+      }
+    };
+    loadBestScores();
+  }, []);
+
+  useEffect(() => {
+    const loadGameSummaries = async () => {
+      setLoading(true);
+      try {
+        const summaries = searchQuery.trim()
+          ? await searchGames(searchQuery.split(',').map(s => s.trim()).filter(Boolean))
+          : await getGameSummaries();
+        setGameSummaries(summaries);
+      } catch (error) {
+        console.error('Failed to load game summaries:', error);
+      }
+      setLoading(false);
+    };
+    loadGameSummaries();
+  }, [searchQuery]);
 
   if (selectedGameId) {
     return (
@@ -83,25 +111,31 @@ export const GameHistory = () => {
         </div>
 
         <div className="space-y-2">
-          {gameSummaries.map((game) => (
-            <button
-              key={game.id}
-              onClick={() => setSelectedGameId(game.id)}
-              className="w-full p-3 bg-surface hover:bg-surface-light rounded-lg transition-colors text-left"
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-text-secondary">{game.date}</span>
-                <span className="text-sm text-text-secondary">{game.playerCount} Players</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-primary" />
-                  <span className="text-text">{game.winner.name}</span>
+          {loading ? (
+            <div className="text-center text-text-secondary py-4">Loading games...</div>
+          ) : gameSummaries.length === 0 ? (
+            <div className="text-center text-text-secondary py-4">No games found</div>
+          ) : (
+            gameSummaries.map((game) => (
+              <button
+                key={game.id}
+                onClick={() => setSelectedGameId(game.id)}
+                className="w-full p-3 bg-surface hover:bg-surface-light rounded-lg transition-colors text-left"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm text-text-secondary">{game.date}</span>
+                  <span className="text-sm text-text-secondary">{game.playerCount} Players</span>
                 </div>
-                <span className="font-medium text-primary">{game.winner.score} points</span>
-              </div>
-            </button>
-          ))}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-4 w-4 text-primary" />
+                    <span className="text-text">{game.winner.name}</span>
+                  </div>
+                  <span className="font-medium text-primary">{game.winner.score} points</span>
+                </div>
+              </button>
+            ))
+          )}
         </div>
       </div>
     </div>

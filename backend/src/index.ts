@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { createClient } from '@libsql/client';
 import type { Request, Response } from 'express';
-import type { GameData, PlayerFact } from '../types';
+import type { GameData, PlayerFact } from './types';
 
 const app = express();
 

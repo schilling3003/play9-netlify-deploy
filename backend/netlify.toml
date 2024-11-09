@@ -1,14 +1,23 @@
 [build]
-  functions = "functions"
-  command = "npm run build"
-
-[build.environment]
-  NODE_VERSION = "16"
+  publish = "public"
+  command = "echo 'No build needed'"
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/server"
+  from = "/*"
+  to = "/.netlify/functions/api/:splat"
   status = 200
+  force = true
 
-[context.production.environment]
-  SQLITE_DB_PATH = "/opt/netlify/persistent/golf.db"
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type"
