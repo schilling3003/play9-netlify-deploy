@@ -1,11 +1,9 @@
 [build]
-  base = "frontend"
-  command = "npm ci --install-links=false && npm run build"
-  publish = "frontend/dist"
+  command = "npm install && npm run build"
+  publish = "dist"
 
 [build.environment]
   NODE_VERSION = "18"
-  NPM_CONFIG_WORKSPACES = "false"
 
 [[redirects]]
   from = "/*"
