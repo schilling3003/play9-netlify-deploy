@@ -19,8 +19,12 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Database setup
+if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
+  throw new Error('Missing required environment variables: TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set');
+}
+
 const db = createClient({
-  url: process.env.TURSO_DATABASE_URL || 'file:golf.db',
+  url: process.env.TURSO_DATABASE_URL,
   authToken: process.env.TURSO_AUTH_TOKEN
 });
 
